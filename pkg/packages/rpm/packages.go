@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/maxgio92/linux-packages/internal/network"
 	"github.com/maxgio92/linux-packages/pkg/packages"
@@ -94,7 +94,8 @@ type Entry struct {
 func (p *Package) Describe() string { return p.Description }
 
 type PackageSearch struct {
-	names []string
+	names  []string
+	logger *log.Logger
 }
 
 type PackageSearchOption func(s *PackageSearch)
@@ -106,6 +107,12 @@ const (
 func WithPackageNames(names ...string) PackageSearchOption {
 	return func(ps *PackageSearch) {
 		ps.names = names
+	}
+}
+
+func WithPackageLogger(logger *log.Logger) PackageSearchOption {
+	return func(ps *PackageSearch) {
+		ps.logger = logger
 	}
 }
 
@@ -137,7 +144,7 @@ func (ps *PackageSearch) Run(ctx context.Context, sourceCh chan string) chan *pa
 
 	for source := range sourceCh {
 		source := source
-		logrus.WithField("database", source).Warn("receive")
+		ps.logger.WithField("database", source).Debug("receive")
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -156,7 +163,7 @@ func (ps *PackageSearch) Run(ctx context.Context, sourceCh chan string) chan *pa
 					if err != nil {
 						break
 					}
-					logrus.WithField("package", pkgURL).Warn("send")
+					ps.logger.WithField("package", pkgURL).Debug("send")
 					destCh <- packages.NewPackage(
 						packages.WithName(pkg.Name),
 						packages.WithVersion(pkg.Version.Ver+"+"+pkg.Version.Rel),
@@ -259,8 +266,6 @@ func packagesFromXML(_ context.Context, nodes []*xmlquery.Node) chan *Package {
 			err := xml.Unmarshal([]byte(nodes[k].OutputXML(true)), pkg)
 			if err == nil {
 				outCh <- pkg
-			} else {
-				logrus.Debug(err)
 			}
 		}()
 	}

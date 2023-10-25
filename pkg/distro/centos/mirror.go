@@ -2,17 +2,25 @@ package centos
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"sync"
 
 	wfind "github.com/maxgio92/wfind/pkg/find"
 )
 
-type MirrorRootsSearcher struct{}
+type MirrorRootsSearcher struct {
+	logger *log.Logger
+}
 
-type Option func(o *MirrorRootsSearcher)
+type MirrorSearchOption func(o *MirrorRootsSearcher)
 
-func NewMirrorRootSearcher(options ...Option) *MirrorRootsSearcher {
+func WithMirrorLogger(logger *log.Logger) MirrorSearchOption {
+	return func(search *MirrorRootsSearcher) {
+		search.logger = logger
+	}
+}
+
+func NewMirrorRootSearcher(options ...MirrorSearchOption) *MirrorRootsSearcher {
 	mrs := new(MirrorRootsSearcher)
 	for _, f := range options {
 		f(mrs)
@@ -28,7 +36,7 @@ func (c *MirrorRootsSearcher) Run(_ context.Context, sourceCh chan string) chan 
 
 	for source := range sourceCh {
 		source := source
-		logrus.WithField("mirror", source).Warn("receive")
+		c.logger.WithField("mirror", source).Debug("receive")
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -46,12 +54,12 @@ func (c *MirrorRootsSearcher) Run(_ context.Context, sourceCh chan string) chan 
 
 			found, err := finder.Find()
 			if err != nil {
-				logrus.Debug(err)
+				c.logger.WithError(err).Debug("error searching mirror roots")
 			}
 			if found != nil {
 				for _, v := range found.URLs {
 					v := v
-					logrus.WithField("root", v).Warn("send")
+					c.logger.WithField("version", v).Debug("send")
 					destCh <- v
 				}
 			}

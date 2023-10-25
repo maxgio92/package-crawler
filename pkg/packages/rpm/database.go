@@ -7,7 +7,7 @@ import (
 	"github.com/antchfx/xmlquery"
 	"github.com/maxgio92/linux-packages/internal/network"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 	"net/http"
 	"net/url"
@@ -29,9 +29,17 @@ const (
 	metadataDataXPath = "//repomd/data"
 )
 
-type DBSearch struct{}
+type DBSearch struct {
+	logger *log.Logger
+}
 
 type DBSearchOption func(s *DBSearch)
+
+func WithDBLogger(logger *log.Logger) DBSearchOption {
+	return func(search *DBSearch) {
+		search.logger = logger
+	}
+}
 
 func NewDBSearcher(o ...DBSearchOption) *DBSearch {
 	dbs := new(DBSearch)
@@ -51,7 +59,7 @@ func (ds *DBSearch) Run(ctx context.Context, sourceCh chan string) chan string {
 
 	for source := range sourceCh {
 		source := source
-		logrus.WithField("repo", source).Warn("receive")
+		ds.logger.WithField("repo", source).Debug("receive")
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -73,7 +81,7 @@ func (ds *DBSearch) Run(ctx context.Context, sourceCh chan string) chan string {
 
 			for k, _ := range dbs {
 				if u, err := url.JoinPath(u.String(), dbs[k].Location.Href); err == nil {
-					logrus.WithField("database", u).Warn("send")
+					ds.logger.WithField("database", u).Debug("send")
 					destCh <- u
 				}
 			}

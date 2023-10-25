@@ -2,9 +2,10 @@ package packages
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"io"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // *****************************************************************
@@ -29,11 +30,31 @@ type Producer interface {
 }
 
 type GenericProducer struct {
-	seeds []string
+	seeds  []string
+	logger *log.Logger
 }
 
-func NewGenericProducer(seeds ...string) *GenericProducer {
-	return &GenericProducer{seeds: seeds}
+type GenericProducerOption func(p *GenericProducer)
+
+func WithSeeds(seeds ...string) GenericProducerOption {
+	return func(p *GenericProducer) {
+		p.seeds = seeds
+	}
+}
+
+func WithLogger(logger *log.Logger) GenericProducerOption {
+	return func(producer *GenericProducer) {
+		producer.logger = logger
+	}
+}
+
+func NewGenericProducer(opts ...GenericProducerOption) *GenericProducer {
+	producer := new(GenericProducer)
+	for _, f := range opts {
+		f(producer)
+	}
+
+	return producer
 }
 
 // Produce is a mirror producer that streams mirror URLs.
@@ -47,7 +68,7 @@ func (p *GenericProducer) Produce(_ context.Context) chan string {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			logrus.WithField("seed", v).Warn("send")
+			p.logger.WithField("seed", v).Debug("send")
 			data <- v
 		}()
 	}

@@ -2,21 +2,27 @@ package rpm
 
 import (
 	"context"
-	"fmt"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"sync"
 
 	wfind "github.com/maxgio92/wfind/pkg/find"
 )
 
-type RepoSearcher struct{}
+type RepoSearcher struct {
+	logger *log.Logger
+}
 
 type RepoSearchOption func(s *RepoSearcher)
 
 const (
 	Repomd = "repomd.xml$"
 )
+
+func WithRepoLogger(logger *log.Logger) RepoSearchOption {
+	return func(search *RepoSearcher) {
+		search.logger = logger
+	}
+}
 
 func NewRepoSearcher(o ...RepoSearchOption) *RepoSearcher {
 	rs := new(RepoSearcher)
@@ -34,7 +40,7 @@ func (rs *RepoSearcher) Run(_ context.Context, sourceCh chan string) chan string
 
 	for source := range sourceCh {
 		source := source
-		logrus.WithField("mirror", source).Warn("receive")
+		rs.logger.WithField("mirror", source).Debug("receive")
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -51,12 +57,12 @@ func (rs *RepoSearcher) Run(_ context.Context, sourceCh chan string) chan string
 
 			found, err := finder.Find()
 			if err != nil {
-				fmt.Println(errors.Wrap(err, "repoSearch"))
+				rs.logger.WithError(err).Warn("error searching repositories")
 			}
 			if found != nil {
 				for _, v := range found.URLs {
 					v := v
-					logrus.WithField("repository", v).Warn("send")
+					rs.logger.WithField("repository", v).Debug("send")
 					destCh <- v
 				}
 			}

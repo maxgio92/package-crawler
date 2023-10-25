@@ -3,14 +3,16 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"os"
 
 	"github.com/maxgio92/linux-packages/pkg/distro/centos"
 )
 
 const (
-	Centos      = "centos"
 	ProgramName = "packages"
+	flagCentos  = "centos"
+	flagAll     = "--all"
 )
 
 // TODO: use Cobra.
@@ -22,17 +24,25 @@ func Run() {
 	}
 
 	switch os.Args[1] {
-	case Centos:
-		for p := range centos.SearchPackages(context.Background(), os.Args[2]) {
-			fmt.Printf("Name: %s\tVersion: %s\tArchitecture: %s\tLocation: %s\n",
-				p.Describe(), p.Version(), p.Architecture(), p.Locate())
-		}
-	case "--all":
-		for p := range centos.SearchPackages(context.Background(), os.Args[2]) {
-			fmt.Printf("Name: %s\tVersion: %s\tArchitecture: %s\tLocation: %s\n",
-				p.Describe(), p.Version(), p.Architecture(), p.Locate())
-		}
+	case flagCentos:
+		runCentos(os.Args[2])
+	case flagAll:
+		runCentos(os.Args[2])
 	default:
 		fmt.Println("distro not supported")
+		os.Exit(1)
+	}
+}
+
+func runCentos(packageName string) {
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+
+	for p := range centos.NewPackageSearch(
+		centos.WithPackageNames(packageName),
+		centos.WithSearchLogger(logger),
+	).Search(context.Background()) {
+		fmt.Printf("Name: %s\tVersion: %s\tArchitecture: %s\tLocation: %s\n",
+			p.Describe(), p.Version(), p.Architecture(), p.Locate())
 	}
 }

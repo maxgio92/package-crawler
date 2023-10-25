@@ -5,19 +5,55 @@ import (
 	"net/url"
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/maxgio92/linux-packages/pkg/packages"
 	"github.com/maxgio92/linux-packages/pkg/packages/rpm"
 )
 
-// SearchPackages is a data streaming pipeline.
-func SearchPackages(ctx context.Context, names ...string) chan *packages.Package {
-	data := packages.NewGenericProducer(MirrorEdge, MirrorArchive).Produce(ctx)
-	data = NewMirrorRootSearcher().Run(ctx, data)
-	data = rpm.NewRepoSearcher().Run(ctx, data)
-	data = rpm.NewDBSearcher().Run(ctx, data)
+type PackageSearch struct {
+	names  []string
+	logger *log.Logger
+}
+
+type PackageSearchOption func(s *PackageSearch)
+
+func WithPackageNames(names ...string) PackageSearchOption {
+	return func(search *PackageSearch) {
+		search.names = names
+	}
+}
+
+func WithSearchLogger(logger *log.Logger) PackageSearchOption {
+	return func(search *PackageSearch) {
+		search.logger = logger
+	}
+}
+
+func NewPackageSearch(o ...PackageSearchOption) *PackageSearch {
+	search := new(PackageSearch)
+	for _, f := range o {
+		f(search)
+	}
+
+	return search
+}
+
+// Search is a data streaming pipeline.
+func (s *PackageSearch) Search(ctx context.Context) chan *packages.Package {
+
+	data := packages.NewGenericProducer(
+		packages.WithSeeds(MirrorEdge, MirrorArchive),
+		packages.WithLogger(s.logger),
+	).Produce(ctx)
+	data = NewMirrorRootSearcher(WithMirrorLogger(s.logger)).Run(ctx, data)
+
+	data = rpm.NewRepoSearcher(rpm.WithRepoLogger(s.logger)).Run(ctx, data)
+	data = rpm.NewDBSearcher(rpm.WithDBLogger(s.logger)).Run(ctx, data)
 
 	return rpm.NewPackageSearcher(
-		rpm.WithPackageNames(names...),
+		rpm.WithPackageNames(s.names...),
+		rpm.WithPackageLogger(s.logger),
 	).Run(ctx, data)
 }
 
