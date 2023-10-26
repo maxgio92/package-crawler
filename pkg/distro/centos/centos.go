@@ -84,8 +84,8 @@ func (s *PackageSearch) Search(ctx context.Context) chan *packages.Package {
 		repos := DefaultRepos()
 		if !s.reposDefault && len(s.repos) > 0 && len(s.archs) > 0 {
 			t := template.NewMultiplexTemplate(
-				template.WithTemplates(DefaultReposT...),
-				template.WithVariables(map[string][]string{keyArch: DefaultArchs}),
+				template.WithTemplates(s.repos...),
+				template.WithVariables(map[string][]string{keyArch: s.archs}),
 			)
 
 			repos, _ = t.Run()
