@@ -51,7 +51,7 @@ func NewMultiplexTemplate(opts ...Option) *MultiplexTemplate {
 // The output is a slice of template strings, that contains all the combinations derived from the expasion
 // of the variables.
 func (t *MultiplexTemplate) Run() ([]string, error) {
-	res := make([]string, len(t.templates))
+	var res []string
 	for _, v := range t.templates {
 		v := v
 		r, err := doRun(v, t.vars)
