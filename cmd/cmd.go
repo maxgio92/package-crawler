@@ -41,14 +41,21 @@ func Run() {
 }
 
 func runCentos(packageName string) {
-	logger := log.NewLogger(LogLevel)
+	logger := log.NewJSONLogger(
+		log.WithLevel(LogLevel),
+		log.WithOutput(os.Stderr),
+	)
+
+	outLogger := log.NewJSONLogger(
+		log.WithOutput(os.Stdout),
+	)
 
 	for p := range centos.NewPackageSearch(
 		centos.WithPackageNames(packageName),
 		centos.WithDefaultRepos(true),
 		centos.WithSearchLogger(logger),
 	).Search(context.Background()) {
-		logger.
+		outLogger.
 			WithField("name", p.Describe()).
 			WithField("version", p.Version()).
 			WithField("architecture", p.Architecture()).
