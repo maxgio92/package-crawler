@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/maxgio92/linux-packages/internal/output/log"
 	"github.com/maxgio92/linux-packages/pkg/distro/centos"
 )
 
@@ -40,14 +41,17 @@ func Run() {
 }
 
 func runCentos(packageName string) {
-	logger := logrus.New()
-	logger.SetLevel(LogLevel)
+	logger := log.NewLogger(LogLevel)
 
 	for p := range centos.NewPackageSearch(
 		centos.WithPackageNames(packageName),
 		centos.WithSearchLogger(logger),
 	).Search(context.Background()) {
-		fmt.Printf("Name: %s\tVersion: %s\tArchitecture: %s\tLocation: %s\n",
-			p.Describe(), p.Version(), p.Architecture(), p.Locate())
+		logger.
+			WithField("name", p.Describe()).
+			WithField("version", p.Version()).
+			WithField("architecture", p.Architecture()).
+			WithField("location", p.Locate()).
+			Info()
 	}
 }
