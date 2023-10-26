@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/maxgio92/linux-packages/pkg/distro/centos"
 )
@@ -13,6 +14,10 @@ const (
 	ProgramName = "packages"
 	flagCentos  = "centos"
 	flagAll     = "--all"
+)
+
+var (
+	LogLevel = logrus.DebugLevel
 )
 
 // TODO: use Cobra.
@@ -36,7 +41,7 @@ func Run() {
 
 func runCentos(packageName string) {
 	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger.SetLevel(LogLevel)
 
 	for p := range centos.NewPackageSearch(
 		centos.WithPackageNames(packageName),

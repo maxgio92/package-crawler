@@ -39,6 +39,8 @@ github.com/kennygrant/sanitize v1.2.4/go.mod h1:LGsjYYtgxbetdg5owWB2mpgUL6e2nfw2
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
+github.com/maxgio92/krawler v0.5.0 h1:6Eyuf0N+srthGChAFV2VfPXZk+gmmD1wlRVoDNNu86o=
+github.com/maxgio92/krawler v0.5.0/go.mod h1:g+b7nzoAh7CfazYy6+lJW2yqQqyjNc/wxt4Io6U0qLo=
 github.com/maxgio92/wfind v0.3.0 h1:AaLgFIh/Xl8uh1mTRrdJn5UMo+HqqZ956XVBYltqfWs=
 github.com/maxgio92/wfind v0.3.0/go.mod h1:rF4164w0HtbGl1B/DgH/AqIKdGiPDXXaMewfFiUrh9E=
 github.com/onsi/ginkgo/v2 v2.11.0 h1:WgqUCUt/lT6yXoQ8Wef0fsNn5cAuMK7+KT9UFRz2tcU=

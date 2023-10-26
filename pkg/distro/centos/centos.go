@@ -9,6 +9,7 @@ import (
 
 	"github.com/maxgio92/linux-packages/pkg/packages"
 	"github.com/maxgio92/linux-packages/pkg/packages/rpm"
+	"github.com/maxgio92/linux-packages/pkg/template"
 )
 
 type PackageSearch struct {
@@ -41,20 +42,30 @@ func NewPackageSearch(o ...PackageSearchOption) *PackageSearch {
 
 // Search is a data streaming pipeline.
 func (s *PackageSearch) Search(ctx context.Context) chan *packages.Package {
-
 	data := packages.NewGenericProducer(
 		packages.WithSeeds(MirrorEdge, MirrorArchive),
 		packages.WithLogger(s.logger),
 	).Produce(ctx)
-	data = NewMirrorRootSearcher(WithMirrorLogger(s.logger)).Run(ctx, data)
-
-	data = rpm.NewRepoSearcher(rpm.WithRepoLogger(s.logger)).Run(ctx, data)
+	data = NewVersionSearcher(WithMirrorLogger(s.logger)).Run(ctx, data)
+	data = stubStage(ctx, data, defaultRepos())
+	//data = rpm.NewRepoSearcher(rpm.WithRepoLogger(s.logger)).Run(ctx, data)
 	data = rpm.NewDBSearcher(rpm.WithDBLogger(s.logger)).Run(ctx, data)
 
 	return rpm.NewPackageSearcher(
 		rpm.WithPackageNames(s.names...),
 		rpm.WithPackageLogger(s.logger),
 	).Run(ctx, data)
+}
+
+func defaultRepos() []string {
+	t := template.NewMultiplexTemplate(
+		template.WithTemplates(defaultReposT...),
+		template.WithVariables(map[string][]string{keyArch: defaultArchs}),
+	)
+
+	repos, _ := t.Run()
+
+	return repos
 }
 
 func stubStage(_ context.Context, seedsCh chan string, data []string) chan string {

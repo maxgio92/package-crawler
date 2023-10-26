@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/antchfx/xmlquery v1.3.9
 	github.com/google/go-cmp v0.5.9
+	github.com/maxgio92/krawler v0.5.0
 	github.com/maxgio92/wfind v0.3.0
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8

@@ -8,20 +8,20 @@ import (
 	wfind "github.com/maxgio92/wfind/pkg/find"
 )
 
-type MirrorRootsSearcher struct {
+type VersionSearcher struct {
 	logger *log.Logger
 }
 
-type MirrorSearchOption func(o *MirrorRootsSearcher)
+type MirrorSearchOption func(o *VersionSearcher)
 
 func WithMirrorLogger(logger *log.Logger) MirrorSearchOption {
-	return func(search *MirrorRootsSearcher) {
+	return func(search *VersionSearcher) {
 		search.logger = logger
 	}
 }
 
-func NewMirrorRootSearcher(options ...MirrorSearchOption) *MirrorRootsSearcher {
-	mrs := new(MirrorRootsSearcher)
+func NewVersionSearcher(options ...MirrorSearchOption) *VersionSearcher {
+	mrs := new(VersionSearcher)
 	for _, f := range options {
 		f(mrs)
 	}
@@ -29,7 +29,7 @@ func NewMirrorRootSearcher(options ...MirrorSearchOption) *MirrorRootsSearcher {
 	return mrs
 }
 
-func (c *MirrorRootsSearcher) Run(_ context.Context, sourceCh chan string) chan string {
+func (c *VersionSearcher) Run(_ context.Context, sourceCh chan string) chan string {
 	destCh := make(chan string)
 
 	wg := sync.WaitGroup{}
@@ -54,7 +54,7 @@ func (c *MirrorRootsSearcher) Run(_ context.Context, sourceCh chan string) chan 
 
 			found, err := finder.Find()
 			if err != nil {
-				c.logger.WithError(err).Debug("error searching mirror roots")
+				c.logger.WithError(err).Debug("error searching centos versions")
 			}
 			if found != nil {
 				for _, v := range found.URLs {

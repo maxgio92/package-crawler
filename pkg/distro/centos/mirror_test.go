@@ -117,13 +117,13 @@ func runMockMirror(t testing.TB) *mocha.Mocha {
 
 var _ = Describe("Mirror root search mock", func() {
 	var (
-		search *centos.MirrorRootsSearcher
+		search *centos.VersionSearcher
 		ctx    = context.Background()
 	)
 
 	Context("With versions", func() {
 		BeforeEach(func() {
-			search = centos.NewMirrorRootSearcher()
+			search = centos.NewVersionSearcher()
 		})
 		Context("with seed URLs", Ordered, func() {
 			var (
