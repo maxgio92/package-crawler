@@ -19,7 +19,7 @@ var (
 		"/BaseOS/{{ .arch }}/os/repodata/repomd.xml",
 		"/Devel/{{ .arch }}/os/repodata/repomd.xml",
 		"/os/{{ .arch }}/repodata/repomd.xml",
-		"/os/{{ .arch }}/repodata/repomd.xml",
+		"/updates/{{ .arch }}/repodata/repomd.xml",
 	}
 	DefaultArchs = []string{X86_64, Aarch64, I686, Ppc64le}
 )
