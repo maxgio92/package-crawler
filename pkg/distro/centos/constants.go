@@ -6,16 +6,20 @@ const (
 	//VersionRegex  = `^(0|[1-9]\d*)(\.(0|[1-9]\d*)?)?(\.(0|[1-9]\d*)?)?(-[a-zA-Z\d][-a-zA-Z.\d]*)?(\+[a-zA-Z\d][-a-zA-Z.\d]*)?\/?$`
 	VersionRegex = `^.+\/?$`
 	keyArch      = "arch"
+	X86_64       = "x86_64"
+	Aarch64      = "aarch64"
+	I686         = "i686"
+	Ppc64le      = "ppc64le"
 )
 
 var (
 	defaultVersions = []string{"8-stream"}
-	defaultReposT   = []string{
+	DefaultReposT   = []string{
 		"/AppStream/{{ .arch }}/os/repodata/repomd.xml",
 		"/BaseOS/{{ .arch }}/os/repodata/repomd.xml",
 		"/Devel/{{ .arch }}/os/repodata/repomd.xml",
 		"/os/{{ .arch }}/repodata/repomd.xml",
 		"/os/{{ .arch }}/repodata/repomd.xml",
 	}
-	defaultArchs = []string{"x86_64", "aarch64", "i686", "ppc64le"}
+	DefaultArchs = []string{X86_64, Aarch64, I686, Ppc64le}
 )

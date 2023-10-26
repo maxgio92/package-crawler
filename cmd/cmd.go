@@ -45,6 +45,7 @@ func runCentos(packageName string) {
 
 	for p := range centos.NewPackageSearch(
 		centos.WithPackageNames(packageName),
+		centos.WithDefaultRepos(true),
 		centos.WithSearchLogger(logger),
 	).Search(context.Background()) {
 		logger.

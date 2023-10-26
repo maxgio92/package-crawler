@@ -13,7 +13,12 @@ import (
 )
 
 type PackageSearch struct {
-	names  []string
+	names        []string
+	repos        []string
+	reposAll     bool
+	reposDefault bool
+	archs        []string
+
 	logger *log.Logger
 }
 
@@ -28,6 +33,30 @@ func WithPackageNames(names ...string) PackageSearchOption {
 func WithSearchLogger(logger *log.Logger) PackageSearchOption {
 	return func(search *PackageSearch) {
 		search.logger = logger
+	}
+}
+
+func WithRepoTemplates(repos ...string) PackageSearchOption {
+	return func(search *PackageSearch) {
+		search.repos = repos
+	}
+}
+
+func WithArchs(archs ...string) PackageSearchOption {
+	return func(search *PackageSearch) {
+		search.archs = archs
+	}
+}
+
+func WithAllRepos(reposAll bool) PackageSearchOption {
+	return func(search *PackageSearch) {
+		search.reposAll = reposAll
+	}
+}
+
+func WithDefaultRepos(reposDefault bool) PackageSearchOption {
+	return func(search *PackageSearch) {
+		search.reposDefault = reposDefault
 	}
 }
 
@@ -47,8 +76,25 @@ func (s *PackageSearch) Search(ctx context.Context) chan *packages.Package {
 		packages.WithLogger(s.logger),
 	).Produce(ctx)
 	data = NewVersionSearcher(WithMirrorLogger(s.logger)).Run(ctx, data)
-	data = stubStage(ctx, data, defaultRepos())
-	//data = rpm.NewRepoSearcher(rpm.WithRepoLogger(s.logger)).Run(ctx, data)
+
+	switch s.reposAll {
+	case true:
+		data = rpm.NewRepoSearcher(rpm.WithRepoLogger(s.logger)).Run(ctx, data)
+	case false:
+		repos := DefaultRepos()
+		if !s.reposDefault && len(s.repos) > 0 && len(s.archs) > 0 {
+			t := template.NewMultiplexTemplate(
+				template.WithTemplates(DefaultReposT...),
+				template.WithVariables(map[string][]string{keyArch: DefaultArchs}),
+			)
+
+			repos, _ = t.Run()
+		}
+		data = stubStage(ctx, data, repos)
+	default:
+		data = stubStage(ctx, data, DefaultRepos())
+	}
+
 	data = rpm.NewDBSearcher(rpm.WithDBLogger(s.logger)).Run(ctx, data)
 
 	return rpm.NewPackageSearcher(
@@ -57,10 +103,10 @@ func (s *PackageSearch) Search(ctx context.Context) chan *packages.Package {
 	).Run(ctx, data)
 }
 
-func defaultRepos() []string {
+func DefaultRepos() []string {
 	t := template.NewMultiplexTemplate(
-		template.WithTemplates(defaultReposT...),
-		template.WithVariables(map[string][]string{keyArch: defaultArchs}),
+		template.WithTemplates(DefaultReposT...),
+		template.WithVariables(map[string][]string{keyArch: DefaultArchs}),
 	)
 
 	repos, _ := t.Run()
